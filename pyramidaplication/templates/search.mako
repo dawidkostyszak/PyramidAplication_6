@@ -7,9 +7,9 @@
             </div>
             <button class="btn_search btn btn-primary" type=submit>Search</button>
         </form>
-        % if logged_in:
+        % if request.user:
             <a class="btn" href="/history">History search</a>
-            <a class="btn" href="/top3">Top 3 products</a>
+            <a class="btn" href="/top">Top 3 products</a>
         %endif
         <div class="clear"></div>
     </div>

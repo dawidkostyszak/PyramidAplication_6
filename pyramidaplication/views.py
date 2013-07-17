@@ -1,25 +1,11 @@
-from pyramid.view import (
-    view_config,
-)
-
+from pyramid.view import view_config
 from allegro.lib import allegro_api, AllegroError
 from nokaut.lib import nokaut_api, NokautError
-
-from pyramid.httpexceptions import (
-    HTTPFound,
-)
-
-from pyramid.security import (
-    remember,
-    forget,
-    authenticated_userid,
-)
-
-from .models import (
-    DBSession,
-    Product,
-    User,
-)
+from pyramid.httpexceptions import HTTPFound
+from pyramid.security import remember, forget, NO_PERMISSION_REQUIRED
+from .models import DBSession, Product, User
+from pyramid_simpleform import Form
+from forms import RegistrationForm, LoginForm
 
 
 @view_config(
@@ -27,10 +13,7 @@ from .models import (
     renderer='pyramidaplication:templates/main.mako',
 )
 def home_view(request):
-    logged_in = authenticated_userid(request)
-    print logged_in
-
-    return {'logged_in': logged_in}
+    return {}
 
 
 @view_config(
@@ -38,11 +21,6 @@ def home_view(request):
     renderer='pyramidaplication:templates/result.mako',
 )
 def search_result_view(request):
-
-    logged_in = authenticated_userid(request)
-
-    if not logged_in:
-        return {'error': 'You need to login before search.'}
 
     data = request.GET.get('item')
 
@@ -83,9 +61,9 @@ def search_result_view(request):
         nokaut_price_state=nokaut_state,
         nokaut_price=nokaut_price,
         nokaut_url=nokaut_url,
-        logged_in=logged_in,
     )
 
+    user_id = request.user.id
     popularity = 1
 
     products = DBSession.query(Product).filter_by(name=data).all()
@@ -100,7 +78,7 @@ def search_result_view(request):
         n_price=nokaut_price,
         n_url=nokaut_url,
         popularity=popularity,
-        user=logged_in,
+        user_id=user_id,
     )
     DBSession.add(product)
 
@@ -110,12 +88,14 @@ def search_result_view(request):
 @view_config(
     route_name='login',
     renderer='pyramidaplication:templates/login.mako',
+    permission=NO_PERMISSION_REQUIRED,
 )
 def login_view(request):
-    error = None
-    if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
+    form = Form(request, schema=LoginForm)
+
+    if request.method == 'POST' and form.validate():
+        login = form.data['login']
+        password = form.data['password']
 
         user = DBSession.query(User).filter_by(
             login=login,
@@ -128,10 +108,9 @@ def login_view(request):
                 location='/',
                 headers=headers,
             )
-        error = 'Failed login'
 
     return dict(
-        error=error,
+        error=form.errors,
     )
 
 
@@ -139,7 +118,7 @@ def login_view(request):
 def logout(request):
     headers = forget(request)
     return HTTPFound(
-        location=('/'),
+        location=('/login'),
         headers=headers,
     )
 
@@ -147,42 +126,25 @@ def logout(request):
 @view_config(
     route_name='register',
     renderer='pyramidaplication:templates/register.mako',
+    permission=NO_PERMISSION_REQUIRED,
 )
 def register_view(request):
-    message = None
-    error = None
 
-    if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
-        conf_password = request.POST.get('confirm_password')
+    form = Form(request, schema=RegistrationForm)
 
-        if not login:
-            error = 'Please add login.'
-        elif not password:
-            error = 'Please add password.'
-        elif not conf_password:
-            error = 'Please add confirm password.'
-
-        if error:
-            return {'message': message, 'error': error}
-
-        log = DBSession.query(User).filter_by(login=login).first()
-
-        if log:
-            error = 'Login already in use please try another.'
-        elif len(password) < 8:
-            error = 'Password to short. Need 8 characters.'
-        elif password != conf_password:
-            error = 'Confirm password is different than password.'
-        else:
-            message = 'Login registered successfully.'
-            user = User(login=login, password=password)
-            DBSession.add(user)
+    if request.method == 'POST' and form.validate():
+        login = form.data['login']
+        password = form.data['password']
+        user = User(login=login, password=password)
+        DBSession.add(user)
+        return dict(
+            message='Login registered successfully.',
+            error=form.errors,
+        )
 
     return dict(
-        message=message,
-        error=error,
+        message=None,
+        error=form.errors
     )
 
 
@@ -191,42 +153,22 @@ def register_view(request):
     renderer='pyramidaplication:templates/history.mako',
 )
 def history_view(request):
-    response = dict(
-        history_search={},
-        logged_in=authenticated_userid(request),
-    )
-    products = DBSession.query(Product).filter_by(
-        user=response['logged_in']).all()
 
-    for product in products:
-        if product.a_price < product.n_price:
-            price = product.a_price
-            url = product.a_url
-        else:
-            price = product.n_price
-            url = product.n_url,
-        response['history_search'][product.id] = (
-            product.name,
-            price,
-            url[0],
-        )
-    return response
+    user_id = request.user.id
+    products = DBSession.query(Product).filter_by(user_id=user_id).all()
+
+    return dict(history_search=products)
 
 
 @view_config(
-    route_name='top3',
-    renderer='pyramidaplication:templates/top3.mako',
+    route_name='top',
+    renderer='pyramidaplication:templates/top.mako',
 )
-def top3_view(request):
-    response = dict(
-        top3={},
-        logged_in=authenticated_userid(request),
-    )
+def top_view(request):
 
-    products = DBSession.query(Product).order_by(
-        Product.popularity.desc()).all()
-    for product in products:
-        response['top3'][product.name] = ''
-        if len(response['top3']) == 3:
-            break
-    return response
+    top = DBSession.query(Product)\
+                   .group_by(Product.popularity)\
+                   .order_by(Product.popularity.desc())\
+                   .limit(3)
+
+    return dict(top=top)
