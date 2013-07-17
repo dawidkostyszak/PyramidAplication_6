@@ -117,9 +117,13 @@ class CheckPassword(FancyValidator):
 
 
 class RegistrationForm(Schema):
+
+    allow_extra_fields = True
+    filter_extra_fields = True
+
     login = CheckLogin()
     password = CheckPassword()
-    confirm_password = CheckPassword()
+    confirm_password = validators.String()
     chained_validators = [
         validators.FieldsMatch(
             'password',
@@ -135,13 +139,6 @@ class ValidateLogin(FancyValidator):
         if not value:
             raise Invalid(
                 'Please add login.',
-                value,
-                state
-            )
-
-        if not DBSession.query(User).filter_by(login=value).first():
-            raise Invalid(
-                'Login does not exists.',
                 value,
                 state
             )
@@ -163,7 +160,7 @@ class ValidatePassword(FancyValidator):
                 password=value
         ).first():
             raise Invalid(
-                'Wrong password.',
+                'Wrong login or password.',
                 value,
                 state
             )
@@ -171,5 +168,9 @@ class ValidatePassword(FancyValidator):
 
 
 class LoginForm(Schema):
+
+    allow_extra_fields = True
+    filter_extra_fields = True
+
     login = ValidateLogin()
     password = ValidatePassword()
