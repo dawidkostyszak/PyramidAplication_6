@@ -41,6 +41,7 @@ def search_result_view(request):
     if product_exists:
         if (date - product_exists.date).days < 2:
             product_exists.popularity += 1
+            DBSession.flush()
             return dict(
                 product=product_exists,
                 error=error,
@@ -83,6 +84,7 @@ def search_result_view(request):
         date=date,
     )
     DBSession.add(product)
+    DBSession.flush()
 
     return dict(
         product=product,
@@ -140,6 +142,7 @@ def register_view(request):
         password = form.data['password']
         user = User(login=login, password=password)
         DBSession.add(user)
+        DBSession.flush()
 
         user = DBSession.query(User).filter_by(
             login=login,

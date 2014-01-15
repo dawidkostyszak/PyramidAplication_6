@@ -270,7 +270,7 @@ a.info:hover span{ /*the span will display just on :hover state*/
 .more {
   text-align: right;
 }
-.more a {
+.more button {
   padding: 8px 15px;
   font-size: 15px;
   text-decoration: none;
@@ -403,3 +403,8 @@ a.info:hover span{ /*the span will display just on :hover state*/
 }
 
 /* << Bootstrap */
+
+.spinner{
+    background: url(../img/loader.gif) 98% center no-repeat;
+    width: 60px;
+}
