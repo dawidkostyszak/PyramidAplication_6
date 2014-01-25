@@ -41,6 +41,7 @@ def main(global_config, **settings):
     config.add_route('logout', '/logout')
     config.add_route('register', '/register')
     config.add_route('history', '/history')
+    config.add_route('history_refresh', '/history_refresh')
     config.add_route('top', '/top')
     config.scan()
     return config.make_wsgi_app()

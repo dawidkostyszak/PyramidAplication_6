@@ -32,11 +32,10 @@ def search_result_view(request):
     date = datetime.date.today()
     user_id = request.user.id
     error = None
-    product_exists = DBSession.query(Product)\
-                              .filter(
-                                  Product.name == name,
-                                  Product.user_id == user_id,
-                              ).first()
+    product_exists = DBSession.query(Product).filter(
+      Product.name == name,
+      Product.user_id == user_id,
+    ).first()
 
     if product_exists:
         if (date - product_exists.date).days < 2:
@@ -64,11 +63,10 @@ def search_result_view(request):
 
     popularity = 1
 
-    prod = DBSession.query(Product)\
-                    .filter(
-                        Product.name == name,
-                        Product.user_id == user_id
-                    ).first()
+    prod = DBSession.query(Product).filter(
+        Product.name == name,
+        Product.user_id == user_id
+    ).first()
 
     if prod:
         popularity = prod.popularity + 1
@@ -164,12 +162,26 @@ def register_view(request):
 def history_view(request):
 
     user_id = request.user.id
-    products = DBSession.query(Product)\
-                        .filter_by(user_id=user_id)\
-                        .order_by(Product.date.desc())\
-                        .all()
+    products = DBSession.query(Product).filter_by(
+        user_id=user_id
+    ).order_by(
+        Product.date.desc()
+    ).all()
 
     return dict(history_search=products)
+
+
+@view_config(renderer='json', route_name='history_refresh')
+def history_json_refresh(request):
+    response = search_result_view(request)
+    DBSession.flush()
+    product = response['product']
+    return dict(
+        a_price=product.a_price,
+        n_price=product.n_price,
+        date=product.date.strftime('%Y-%m-%d'),
+        count=product.popularity,
+    )
 
 
 @view_config(

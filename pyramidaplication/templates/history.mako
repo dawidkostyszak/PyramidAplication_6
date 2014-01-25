@@ -24,9 +24,9 @@
             <td class="price_list" name="searched_count">
                 ${product.popularity} times
             </td>
-            <td class="more"><button class="link_more btn">
-                Refresh
-            </button></td>
+            <td class="more">
+            <button class="link_more btn">Refresh</button>
+            </td>
         </tr>
         %endfor
     </table>

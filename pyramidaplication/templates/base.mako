@@ -35,40 +35,35 @@
     <script type="text/javascript">
     $(document).ready(function() {
 
-        $('.more  button').click(function() {
-            var $name = $('.name_list');
-            var $a_price = $('td[name="a_price"]');
-            var $n_price = $('td[name="n_price"]');
-            var $date = $('td[name="date"]');
-            var $count = $('td[name="searched_count"]');
-            var button = $(this);
-            waiting(button);
+        $('.link_more').live("click", function() {
+            var $button = $(this),
+                $row = $(this).parents('tr'),
+                $name = $row.find('td[class="name_list"]');
+            waiting($button);
 
-            $.getJSON('/json?item='+ $name.text() , function(data){
-            if (data.a_price == null){
-            data.a_price = 0.0;
-            }
-            if (data.n_price == null){
-            data.n_price = 0.0;
-            }
-            $a_price.text(data.a_price);
-            $n_price.text(data.n_price);
-            $date.text(data.date);
-            $count.text(data.popularity);
+            $.getJSON('/history_refresh?item='+ $name.text() , function(data) {
+                if (data.a_price === null) {
+                    data.a_price = 0.0;
+                }
+                if (data.n_price === null) {
+                    data.n_price = 0.0;
+                }
+                $row.find('td[name="a_price"]').text(data.a_price);
+                $row.find('td[name="n_price"]').text(data.n_price);
+                $row.find('td[name="date"]').text(data.date);
+                $row.find('td[name="searched_count"]').text(data.count + ' times');
 
-            }).done(function() { done(button); })
-            .fail(function() { alert('Refreshing error...'); });
+            })
+            .success(function() {refreshed($button);})
+            .error(function() {alert('Refreshing error...');});
 
-            function waiting(obj){
-            $(obj).hide();
-            $(obj).parent().addClass('spinner');
+            function waiting(obj) {
+                $(obj).parent().html($('<img>', {src: '/static/img/loader.gif', id:'spinner'}));
             }
 
-            function done(obj){
-            $(obj).show()
-            $(obj).parent().removeClass('spinner');
+            function refreshed(obj) {
+                $('#spinner').parent().html(obj);
             }
-
         });
     });
     </script>

@@ -403,8 +403,3 @@ a.info:hover span{ /*the span will display just on :hover state*/
 }
 
 /* << Bootstrap */
-
-.spinner{
-    background: url(../img/loader.gif) 98% center no-repeat;
-    width: 60px;
-}
