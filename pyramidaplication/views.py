@@ -190,8 +190,8 @@ def history_json_refresh(request):
 )
 def top_view(request):
 
-    top = DBSession.query(Product)\
-                   .order_by(Product.popularity.desc())\
-                   .limit(3)
+    top = DBSession.query(Product).order_by(
+        Product.popularity.desc()
+    ).limit(3)
 
     return dict(top=top)
