@@ -3,7 +3,7 @@
     <div class="box_search">
         <form action="/search_result">
             <div class="search">
-                <input type="text" name='item' value="enter a product name"/>
+                <input type="text" name='item' placeholder="enter a product name"/>
             </div>
             <button class="btn_search btn btn-primary" type=submit>Search</button>
         </form>
