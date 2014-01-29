@@ -13,6 +13,7 @@ class Product(Base):
     name = Column(Text)
     a_price = Column(Float)
     a_url = Column(Text)
+    a_img = Column(Text)
     n_price = Column(Float)
     n_url = Column(Text)
     popularity = Column(Integer)

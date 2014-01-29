@@ -47,10 +47,13 @@ def search_result_view(request):
             )
 
     try:
-        allegro_price, allegro_url = allegro_api(name)
+        allegro_data = allegro_api(name)
     except AllegroError:
-        allegro_price = 0
-        allegro_url = ''
+        allegro_data = {
+            'price': 0,
+            'url': '',
+            'img': '',
+        }
 
     try:
         nokaut_price, nokaut_url = nokaut_api(
@@ -73,8 +76,9 @@ def search_result_view(request):
 
     product = Product(
         name=name,
-        a_price=allegro_price,
-        a_url=allegro_url,
+        a_price=allegro_data['price'],
+        a_url=allegro_data['url'],
+        a_img=allegro_data['img'],
         n_price=nokaut_price,
         n_url=nokaut_url,
         popularity=popularity,
